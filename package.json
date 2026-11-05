@@ -1,0 +1,32 @@
+{
+  "name": "nextjs-cache-playground",
+  "private": true,
+  "version": "1.0.0",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "lab": "node scripts/lab.mjs",
+    "dev": "node scripts/lab.mjs --dev",
+    "test": "playwright test",
+    "test:unit": "node --test tests/origin.test.mjs",
+    "typecheck": "tsc --noEmit -p apps/classic && tsc --noEmit -p apps/components",
+    "screenshots": "playwright test tests/screenshots.spec.ts",
+    "test:report": "playwright show-report",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "next": "16.4.5",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "^22.0.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "^19.0.0",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3"
+  }
+}
