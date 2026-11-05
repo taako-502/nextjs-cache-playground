@@ -15,7 +15,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'npm run lab',
+    command: 'yarn lab',
     url: 'http://127.0.0.1:3201',
     reuseExistingServer: process.env.LAB_REUSE_SERVER === '1',
     timeout: 240_000,

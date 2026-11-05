@@ -40,3 +40,6 @@ next-env.d.ts
 playwright-report/
 test-results/
 .lab*.log
+
+# Yarn installation state (dependencies are installed with yarn.lock)
+.yarn/

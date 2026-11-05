@@ -7,11 +7,11 @@ Next.js **16.4.5** のキャッシュを、本番ビルド・実際のHTTP通信
 
 ## 起動
 
-Node.js 24 LTS（`.nvmrc`）を使用します。
+VoltaでNode.js **24.0.1**とYarn **4.7.0**を固定しています。Voltaをインストールし、このディレクトリでコマンドを実行すると、`package.json`の指定バージョンが使われます。Yarnは`node-modules`方式で依存関係を配置します。
 
 ```sh
-npm ci
-npm run lab
+yarn install --immutable
+yarn lab
 ```
 
 - <http://localhost:3200> — 従来モデル（Cache Components OFF）
@@ -20,7 +20,7 @@ npm run lab
 
 `lab` は取得元APIを起動し、両アプリを **next build → next start** で起動します。起動ごとに両アプリの`.next`を削除し、取得元も新しい状態にします。初回ビルド中に行われる取得もアクセス回数に含みます。終了はCtrl+C。ポートが使われている場合は既存サーバーを停止してから実行してください。
 
-`npm run dev` はUI編集用です。HMRなどの影響があるため、キャッシュの結論は本番モードで確認してください。
+`yarn dev` はUI編集用です。HMRなどの影響があるため、キャッシュの結論は本番モードで確認してください。
 
 ## 実験一覧
 
@@ -58,16 +58,16 @@ npm run lab
 ## 自動テスト
 
 ```sh
-npx playwright install chromium
-npm run test:unit
-npm test
-npm run typecheck
+yarn playwright install chromium
+yarn test:unit
+yarn test
+yarn typecheck
 ```
 
-`npm test`は取得元APIと両アプリを新規起動・本番ビルドして検証します。既に`npm run lab`が動いている場合は停止するか、明示的に再利用してください。
+`yarn test`は取得元APIと両アプリを新規起動・本番ビルドして検証します。既に`yarn lab`が動いている場合は停止するか、明示的に再利用してください。
 
 ```sh
-LAB_REUSE_SERVER=1 npm test
+LAB_REUSE_SERVER=1 yarn test
 ```
 
 | レベル                               | 役割                                                      |
@@ -83,9 +83,9 @@ LAB_REUSE_SERVER=1 npm test
 `docs/screenshots/`に、実際の操作から生成したPNGを同梱しています。
 
 ```sh
-npm run screenshots
+yarn screenshots
 # 既存の本番サーバーを利用する場合
-LAB_REUSE_SERVER=1 npm run screenshots
+LAB_REUSE_SERVER=1 yarn screenshots
 ```
 
 画面幅1440px・全体キャプチャで撮影します。PPRは読み込み中と完了後の2枚を出力します。スクショ内のIDは実行ごとに変わります。テスト失敗時のスクショ・trace・HTMLレポートも出力し、GitHub Actionsでは証拠一式をArtifactに保存します。
