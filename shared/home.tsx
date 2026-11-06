@@ -10,6 +10,20 @@ export function Home() {
       scope: '静的シェル + キャッシュ + ストリーミング',
       href: '/ppr',
     },
+    {
+      number: '04',
+      title: '保存後の更新',
+      lead: '価格を保存し、同じ画面で最新値を読み直す。',
+      scope: 'Server Action / updateTag',
+      href: '/save',
+    },
+    {
+      number: '05',
+      title: '画面遷移とキャッシュ',
+      lead: '詳細へ移動して戻り、取得IDと通信を比較する。',
+      scope: 'Link / Partial Prefetching',
+      href: '/navigation',
+    },
   ];
   return (
     <>

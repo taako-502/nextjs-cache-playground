@@ -31,6 +31,20 @@ export function createOrigin() {
       record.revision += 1;
       return send(200, { key, ...record });
     }
+    if (req.method === 'POST' && url.pathname === '/price') {
+      const raw = url.searchParams.get('price');
+      const price = Number(raw);
+      if (
+        !raw ||
+        !/^\d+$/.test(raw) ||
+        !Number.isSafeInteger(price) ||
+        price > 1000000
+      )
+        return send(400, { error: 'Invalid price' });
+      record.price = price;
+      record.revision += 1;
+      return send(200, { key, ...record });
+    }
     if (req.method === 'GET' && url.pathname === '/read') {
       record.reads += 1;
       const value = {

@@ -63,3 +63,98 @@ test('article screenshots: overview, every layer, and PPR loading/completed', as
   ).toBeTruthy();
   expect(errors).toEqual([]);
 });
+
+test('save returns a fresh cached read in one Server Action', async ({
+  page,
+  request,
+}) => {
+  const key = unique('save');
+  await page.goto(`${modern}/save?key=${key}`);
+  const price = page.getByRole('spinbutton');
+  await price.fill('250');
+  const documents: string[] = [];
+  page.on('request', (r) => {
+    if (r.resourceType() === 'document') documents.push(r.url());
+  });
+  await page.screenshot({
+    path: 'docs/screenshots/save-before.png',
+    fullPage: true,
+  });
+  const action = page.waitForResponse(
+    (r) =>
+      r.request().method() === 'POST' && !!r.request().headers()['next-action'],
+  );
+  await page.getByRole('button', { name: '保存', exact: true }).click();
+  expect((await action).ok()).toBeTruthy();
+  await expect(page.getByTestId('saved-price')).toHaveText('¥250');
+  const state = await request.get(`${modern}/api/control?key=${key}`);
+  const actual = await state.json();
+  expect(actual.reads).toBeGreaterThanOrEqual(2);
+  expect(actual).toMatchObject({
+    price: 250,
+    revision: 2,
+  });
+  expect(documents).toEqual([]);
+  await page.screenshot({
+    path: 'docs/screenshots/save-after.png',
+    fullPage: true,
+  });
+});
+
+test('Link prefetches the static detail, click loads its price, back reuses the list', async ({
+  page,
+  request,
+}) => {
+  const reads = async (key: string) =>
+    (await (await request.get(`${modern}/api/control?key=${key}`)).json())
+      .reads;
+  const before = await reads('nav-detail');
+  const responses = page.waitForResponse(
+    (r) =>
+      r.url().includes('/navigation/detail') &&
+      r.request().headers()['rsc'] === '1' &&
+      r.request().headers()['next-router-prefetch'] !== undefined,
+  );
+  await page.goto(`${modern}/navigation`);
+  const initial = await page
+    .getByTestId('nav-id')
+    .filter({ visible: true })
+    .innerText();
+  const prefetched = await responses;
+  expect(prefetched.ok()).toBeTruthy();
+  expect(await reads('nav-detail')).toBe(before);
+  await expect(page.locator('.reading-guide')).toContainText(
+    '/navigation/detail',
+  );
+  const dynamic = page.waitForResponse(
+    (r) =>
+      r.url().includes('/navigation/detail') &&
+      r.request().headers()['rsc'] === '1' &&
+      r.request().headers()['next-router-prefetch'] === undefined,
+  );
+  await page.getByRole('link', { name: '商品詳細へ' }).click();
+  await dynamic;
+  await expect(
+    page.getByTestId('nav-id').filter({ visible: true }),
+  ).not.toHaveText(initial);
+  expect(await reads('nav-detail')).toBe(before + 1);
+  const listReads = await reads('nav-list');
+  await page.getByRole('button', { name: '一覧に戻る（履歴）' }).click();
+  await expect(page.getByRole('heading', { name: '商品一覧' })).toBeVisible();
+  await expect(page.getByTestId('nav-id').filter({ visible: true })).toHaveText(
+    initial,
+  );
+  expect(await reads('nav-list')).toBe(listReads);
+  await expect(
+    page.locator('.reading-guide table').first().locator('tbody tr'),
+  ).toHaveCount(3);
+  await page.screenshot({
+    path: 'docs/screenshots/navigation-back.png',
+    fullPage: true,
+  });
+  await page.getByRole('button', { name: '再読み込み', exact: true }).click();
+  await expect(
+    page.getByTestId('nav-id').filter({ visible: true }),
+  ).not.toHaveText(initial);
+  expect(await reads('nav-list')).toBe(listReads + 1);
+});
