@@ -10,7 +10,7 @@
     "dev": "node scripts/lab.mjs --dev",
     "test": "playwright test",
     "test:unit": "node --test tests/origin.test.mjs",
-    "typecheck": "tsc --noEmit -p apps/classic && tsc --noEmit -p apps/components",
+    "typecheck": "tsc --noEmit -p apps/components",
     "screenshots": "playwright test tests/screenshots.spec.ts",
     "test:report": "playwright show-report",
     "format": "prettier --write .",

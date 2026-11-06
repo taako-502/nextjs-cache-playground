@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { classic, modern, unique } from './helpers';
+import { modern, unique } from './helpers';
 import { mkdir } from 'node:fs/promises';
 
 test('article screenshots: overview, every layer, and PPR loading/completed', async ({
@@ -14,14 +14,9 @@ test('article screenshots: overview, every layer, and PPR loading/completed', as
       fullPage: true,
     });
   };
-  await page.goto(classic);
-  await capture('00-overview-classic');
   await page.goto(modern);
   await capture('00-overview-components');
   for (const [kind, base, path] of [
-    ['memo', classic, '/memo'],
-    ['data', classic, '/data'],
-    ['full-route', classic, '/full-route'],
     ['use-cache', modern, '/cached'],
     ['cache-life', modern, '/lifetime'],
   ] as const) {
@@ -38,7 +33,7 @@ test('article screenshots: overview, every layer, and PPR loading/completed', as
     await read.click();
     await expect(page.locator('tbody tr')).toHaveCount(2);
     await capture(kind);
-    if (kind === 'data') {
+    if (kind === 'use-cache') {
       await page.getByRole('button', { name: 'タグを即時失効' }).click();
       await expect(page.getByRole('status')).toContainText(
         '無効化を受け付けました',
@@ -46,15 +41,10 @@ test('article screenshots: overview, every layer, and PPR loading/completed', as
       await expect(read).toBeEnabled();
       await read.click();
       await expect(page.getByTestId('display-price')).toHaveText('¥200');
-      await capture('data-after-invalidation');
+      await capture('use-cache-after-invalidation');
     }
   }
-  await page.goto(`${classic}/router/a`);
-  await page.getByRole('link', { name: 'ページBへ' }).click();
-  await expect(page.getByTestId('router-page')).toHaveText('ページB');
-  await page.getByRole('button', { name: '戻る', exact: true }).click();
-  await expect(page.getByTestId('router-page')).toHaveText('ページA');
-  await capture('router-cache');
+
   await page.goto(`${modern}/ppr`, { waitUntil: 'commit' });
   await expect(page.getByTestId('ppr-fallback')).toBeVisible();
   await capture('ppr-loading');
@@ -62,7 +52,7 @@ test('article screenshots: overview, every layer, and PPR loading/completed', as
   await capture('ppr-complete');
   // Narrow layout is a functional check; article images use the desktop viewport.
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto(`${classic}/data?key=${unique('mobile')}`);
+  await page.goto(`${modern}/cached?key=${unique('mobile')}`);
   await expect(
     page.getByRole('button', { name: '再リクエスト', exact: true }),
   ).toBeEnabled();

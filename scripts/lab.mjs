@@ -45,7 +45,7 @@ async function ready(url) {
 }
 try {
   // Refuse to reuse unknown servers; every run gets an isolated origin and builds.
-  for (const port of [4200, 3200, 3201]) {
+  for (const port of [4200, 3201]) {
     try {
       await fetch(`http://127.0.0.1:${port}`, {
         signal: AbortSignal.timeout(500),
@@ -59,31 +59,24 @@ try {
   }
   start(['scripts/origin.mjs']);
   await ready('http://127.0.0.1:4200/health');
-  for (const [app, port] of [
-    ['classic', '3200'],
-    ['components', '3201'],
-  ]) {
-    const cwd = resolve(root, 'apps', app);
-    if (!dev) {
-      await rm(resolve(cwd, '.next'), { recursive: true, force: true });
-      const child = start([next, 'build'], cwd, true);
-      await new Promise((resolve, reject) =>
-        child.on('exit', (code) =>
-          code === 0 ? resolve() : reject(new Error(`${app} build failed`)),
-        ),
-      );
-    }
-    if (stopping) break;
-    start(
-      [next, dev ? 'dev' : 'start', '--hostname', '127.0.0.1', '--port', port],
-      cwd,
+  const port = '3201';
+  const cwd = resolve(root, 'apps/components');
+  if (!dev) {
+    await rm(resolve(cwd, '.next'), { recursive: true, force: true });
+    const child = start([next, 'build'], cwd, true);
+    await new Promise((resolve, reject) =>
+      child.on('exit', (code) =>
+        code === 0 ? resolve() : reject(new Error('Next.js build failed')),
+      ),
     );
-    await ready(`http://127.0.0.1:${port}`);
   }
-  if (!stopping)
-    console.log(
-      '\nCache lab ready: http://localhost:3200 / http://localhost:3201\n',
-    );
+  if (stopping) throw new Error('Lab stopped');
+  start(
+    [next, dev ? 'dev' : 'start', '--hostname', '127.0.0.1', '--port', port],
+    cwd,
+  );
+  await ready(`http://127.0.0.1:${port}`);
+  if (!stopping) console.log('\nCache lab ready: http://localhost:3201\n');
 } catch (error) {
   console.error(error);
   stop(1);

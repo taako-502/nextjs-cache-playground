@@ -1,6 +1,5 @@
 import { expect, type APIRequestContext } from '@playwright/test';
 import type { Observation } from '../shared/data';
-export const classic = 'http://127.0.0.1:3200';
 export const modern = 'http://127.0.0.1:3201';
 export const unique = (prefix: string) => `${prefix}-${crypto.randomUUID()}`;
 export async function observe(

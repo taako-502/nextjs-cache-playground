@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag } from 'next/cache';
+import { revalidateTag } from 'next/cache';
 import { origin, tag, validKey } from './data';
 
 export async function GET(request: Request) {
@@ -47,7 +47,6 @@ export async function POST(request: Request) {
   }
   if (action === 'expire') revalidateTag(tag(key), { expire: 0 });
   else if (action === 'swr') revalidateTag(tag(key), 'max');
-  else if (action === 'path') revalidatePath('/full-route');
   else return Response.json({ error: 'Unknown action' }, { status: 400 });
   return Response.json({ ok: true });
 }

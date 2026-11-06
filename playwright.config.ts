@@ -9,7 +9,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
-    baseURL: 'http://127.0.0.1:3200',
+    baseURL: 'http://127.0.0.1:3201',
     viewport: { width: 1440, height: 1100 },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',

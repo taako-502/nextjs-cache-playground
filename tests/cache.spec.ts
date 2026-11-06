@@ -1,57 +1,37 @@
 import { test, expect } from '@playwright/test';
-import { classic, modern, unique, observe, control, state } from './helpers';
+import { modern, unique, observe, control, state } from './helpers';
 
-test('Request Memoization: two components share one GET, next render gets a new one', async ({
+test(`use cache: fresh render, cached data, explicit tag expiration`, async ({
   request,
 }) => {
-  const key = unique('memo');
-  const url = `${classic}/memo?key=${key}`;
+  const key = unique('cached');
+  const url = `${modern}/cached?key=${key}`;
   const a = await observe(request, url);
-  expect(a.samples[0].readId).toBe(a.samples[1].readId);
-  expect((await state(request, classic, key)).reads).toBe(1);
+  await control(request, modern, key, 'mutate');
   const b = await observe(request, url);
-  expect(b.samples[0].readId).toBe(b.samples[1].readId);
-  expect(b.samples[0].readId).not.toBe(a.samples[0].readId);
   expect(b.renderId).not.toBe(a.renderId);
-  expect((await state(request, classic, key)).reads).toBe(2);
+  expect(b.samples[0].readId).toBe(a.samples[0].readId);
+  expect(b.samples[0].price).toBe(100);
+  expect((await state(request, modern, key)).reads).toBe(1);
+  await control(request, modern, key, 'expire');
+  const c = await observe(request, url);
+  expect(c.samples[0].price).toBe(200);
+  expect(c.samples[0].readId).not.toBe(a.samples[0].readId);
+  expect((await state(request, modern, key)).reads).toBe(2);
 });
-
-for (const [name, base, path] of [
-  ['Data Cache', classic, 'data'],
-  ['use cache', modern, 'cached'],
-] as const) {
-  test(`${name}: fresh render, cached data, explicit tag expiration`, async ({
-    request,
-  }) => {
-    const key = unique(path);
-    const url = `${base}/${path}?key=${key}`;
-    const a = await observe(request, url);
-    await control(request, base, key, 'mutate');
-    const b = await observe(request, url);
-    expect(b.renderId).not.toBe(a.renderId);
-    expect(b.samples[0].readId).toBe(a.samples[0].readId);
-    expect(b.samples[0].price).toBe(100);
-    expect((await state(request, base, key)).reads).toBe(1);
-    await control(request, base, key, 'expire');
-    const c = await observe(request, url);
-    expect(c.samples[0].price).toBe(200);
-    expect(c.samples[0].readId).not.toBe(a.samples[0].readId);
-    expect((await state(request, base, key)).reads).toBe(2);
-  });
-  test(`${name}: max profile serves stale then revalidates`, async ({
-    request,
-  }) => {
-    const key = unique('swr');
-    const url = `${base}/${path}?key=${key}`;
-    await observe(request, url);
-    await control(request, base, key, 'mutate');
-    await control(request, base, key, 'swr');
-    expect((await observe(request, url)).samples[0].price).toBe(100);
-    await expect
-      .poll(async () => (await observe(request, url)).samples[0].price)
-      .toBe(200);
-  });
-}
+test(`use cache: max profile serves stale then revalidates`, async ({
+  request,
+}) => {
+  const key = unique('swr');
+  const url = `${modern}/cached?key=${key}`;
+  await observe(request, url);
+  await control(request, modern, key, 'mutate');
+  await control(request, modern, key, 'swr');
+  expect((await observe(request, url)).samples[0].price).toBe(100);
+  await expect
+    .poll(async () => (await observe(request, url)).samples[0].price)
+    .toBe(200);
+});
 
 test('use cache: arguments isolate entries and tag invalidation does not affect another key', async ({
   request,
@@ -70,26 +50,6 @@ test('use cache: arguments isolate entries and tag invalidation does not affect 
     b.samples[0].readId,
   );
   expect((await state(request, modern, bKey)).reads).toBe(1);
-});
-
-test('Full Route Cache: render ID is reused; path invalidation regenerates the route', async ({
-  request,
-}) => {
-  const url = `${classic}/full-route`;
-  const a = await observe(request, url);
-  const before = await state(request, classic, a.key);
-  await control(request, classic, a.key, 'mutate');
-  const b = await observe(request, url);
-  expect(b.renderId).toBe(a.renderId);
-  expect(b.samples[0].readId).toBe(a.samples[0].readId);
-  expect((await state(request, classic, a.key)).reads).toBe(before.reads);
-  await control(request, classic, a.key, 'path');
-  await expect
-    .poll(async () => (await observe(request, url)).renderId)
-    .not.toBe(a.renderId);
-  await expect
-    .poll(async () => (await observe(request, url)).samples[0].price)
-    .toBe(before.price + 100);
 });
 
 test('cacheLife: production default handler drops timed-stale entries and refetches on access', async ({
@@ -114,30 +74,6 @@ test('cacheLife: production default handler drops timed-stale entries and refetc
   expect((await observe(request, expiredUrl)).samples[0].price).toBe(200);
 });
 
-test('Router Cache: back reuses A without an RSC request; refresh fetches again', async ({
-  page,
-}) => {
-  const errors: string[] = [];
-  page.on('pageerror', (e) => errors.push(e.message));
-  const requests: string[] = [];
-  page.on('request', (req) => {
-    if (req.headers()['rsc'] === '1') requests.push(req.url());
-  });
-  await page.goto('/router/a');
-  const initial = await page.getByTestId('router-render-id').textContent();
-  await page.getByRole('link', { name: 'ページBへ' }).click();
-  await expect(page.getByTestId('router-page')).toHaveText('ページB');
-  const beforeBack = requests.length;
-  await page.getByRole('button', { name: '戻る', exact: true }).click();
-  await expect(page.getByTestId('router-page')).toHaveText('ページA');
-  await expect(page.getByTestId('router-render-id')).toHaveText(initial!);
-  expect(requests.length).toBe(beforeBack);
-  await page.getByRole('button', { name: 'router.refresh()' }).click();
-  await expect(page.getByTestId('router-render-id')).not.toHaveText(initial!);
-  expect(requests.length).toBeGreaterThan(beforeBack);
-  expect(errors).toEqual([]);
-});
-
 test('PPR: static shell and fallback arrive before dynamic data; cached ID survives reload', async ({
   page,
 }) => {
@@ -157,21 +93,21 @@ test('control API rejects invalid requests and cross-origin writes', async ({
 }) => {
   expect(
     (
-      await request.post(`${classic}/api/control`, {
+      await request.post(`${modern}/api/control`, {
         data: { key: '../bad', action: 'mutate' },
       })
     ).status(),
   ).toBe(400);
   expect(
     (
-      await request.post(`${classic}/api/control`, {
+      await request.post(`${modern}/api/control`, {
         data: { key: 'valid', action: 'unknown' },
       })
     ).status(),
   ).toBe(400);
   expect(
     (
-      await request.post(`${classic}/api/control`, {
+      await request.post(`${modern}/api/control`, {
         headers: { origin: 'https://example.com' },
         data: { key: 'valid', action: 'mutate' },
       })

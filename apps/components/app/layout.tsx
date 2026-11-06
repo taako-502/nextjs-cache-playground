@@ -8,7 +8,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja">
       <body>
-        <Header modern={true} />
+        <Header />
         <main>{children}</main>
         <footer>Next.js 16.4.5 · Cache Components ON · ローカルの実測値</footer>
       </body>

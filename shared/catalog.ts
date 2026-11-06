@@ -1,36 +1,6 @@
 export const experiments = {
-  memo: {
-    number: '01',
-    title: 'Request Memoization',
-    lead: '同じ描画の2回の取得が、1回にまとまる。',
-    scope: '1回のサーバーレンダリング',
-    code: "fetch(url, { cache: 'no-store' }) × 2",
-    expected:
-      '2つの取得IDが一致。再リクエストすると両方のIDが変わり、取得元へのアクセスは1回増える。',
-    note: '同一URL・オプションのGETを、2つのServer Componentから呼び出す。Data CacheとFull Route Cacheは使わない。',
-  },
-  data: {
-    number: '02',
-    title: 'Data Cache',
-    lead: 'ページを描画し直しても、取得結果は再利用。',
-    scope: '複数のサーバーリクエスト',
-    code: "fetch(url, { cache: 'force-cache', next: { tags } })",
-    expected:
-      '描画IDが変わっても、取得IDと価格は同じ。タグを失効させた後の取得で最新価格に変わる。',
-    note: 'connection()でページは動的に描画。Full Route Cacheを除外し、Data Cacheだけを観測する。',
-  },
-  full: {
-    number: '03',
-    title: 'Full Route Cache',
-    lead: 'ページの描画結果ごと、再利用。',
-    scope: 'HTML・RSCのサーバーキャッシュ',
-    code: 'export const revalidate = 3600',
-    expected:
-      '再リクエストしても描画IDが同じ。パスの再検証後は描画IDが変わる。',
-    note: 'ビルド時の取得もカウントに含む。Data Cacheも併用するため、取得回数だけでこの層のヒットを判断しない。',
-  },
   cached: {
-    number: '05',
+    number: '01',
     title: 'use cache',
     lead: '関数の戻り値を、引数ごとに再利用。',
     scope: 'Cache Components / 関数の出力',
@@ -40,7 +10,7 @@ export const experiments = {
     note: '内側のfetchはno-store。外側のuse cacheによる再利用を観測する。キーを変えると別のデータを取得する。',
   },
   lifetime: {
-    number: '06',
+    number: '02',
     title: 'cacheLife',
     lead: '標準メモリキャッシュは、5秒後の要求で再取得。',
     scope: 'revalidate: 5秒 / expire: 10秒',

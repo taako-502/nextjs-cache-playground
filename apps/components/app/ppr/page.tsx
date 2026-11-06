@@ -37,10 +37,10 @@ export default function Page() {
     <>
       <div className="breadcrumb">
         <a href="/">実験一覧</a>
-        <span>/ 07</span>
+        <span>/ 03</span>
       </div>
       <section className="experiment-heading">
-        <p className="eyebrow">EXPERIMENT 07 / CACHE COMPONENTS</p>
+        <p className="eyebrow">EXPERIMENT 03 / CACHE COMPONENTS</p>
         <h1>Partial Prerendering</h1>
         <p>静的なシェルを先に。動的な内容は、準備できたら。</p>
       </section>

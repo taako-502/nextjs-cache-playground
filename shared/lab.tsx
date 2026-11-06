@@ -90,15 +90,9 @@ export function Lab({ kind, initial }: { kind: Kind; initial: Observation }) {
       <div className="flow">
         <span>ブラウザ</span>
         <i>→</i>
-        <span className={kind === 'full' ? 'active' : ''}>ページの描画</span>
+        <span>ページの描画</span>
         <i>→</i>
-        <span className={kind !== 'full' ? 'active' : ''}>
-          {kind === 'cached' || kind === 'lifetime'
-            ? 'use cache'
-            : kind === 'memo'
-              ? '同一描画内の取得'
-              : 'Data Cache'}
-        </span>
+        <span className="active">use cache</span>
         <i>→</i>
         <span>取得元API</span>
       </div>
@@ -145,7 +139,7 @@ export function Lab({ kind, initial }: { kind: Kind; initial: Observation }) {
           </small>
         </div>
         <div>
-          <span>取得ID{kind === 'memo' ? ' / Component A' : ''}</span>
+          <span>取得ID</span>
           <code data-testid="read-id">{short(current.samples[0].readId)}</code>
           <small>
             {rows.length > 1
@@ -155,17 +149,6 @@ export function Lab({ kind, initial }: { kind: Kind; initial: Observation }) {
               : '比較前'}
           </small>
         </div>
-        {current.samples[1] && (
-          <div>
-            <span>取得ID / Component B</span>
-            <code>{short(current.samples[1].readId)}</code>
-            <small>
-              {current.samples[0].readId === current.samples[1].readId
-                ? 'Aと一致 → 取得は1回'
-                : 'Aと異なる'}
-            </small>
-          </div>
-        )}
       </div>
       <div className="controls">
         <button disabled={pending || !source} onClick={() => action('read')}>
@@ -178,16 +161,14 @@ export function Lab({ kind, initial }: { kind: Kind; initial: Observation }) {
         >
           取得元を +100円
         </button>
-        {kind !== 'memo' && (
-          <button
-            className="secondary"
-            disabled={pending || !source}
-            onClick={() => action(kind === 'full' ? 'path' : 'expire')}
-          >
-            {kind === 'full' ? 'パスを再検証' : 'タグを即時失効'}
-          </button>
-        )}
-        {(kind === 'cached' || kind === 'data') && (
+        <button
+          className="secondary"
+          disabled={pending || !source}
+          onClick={() => action('expire')}
+        >
+          タグを即時失効
+        </button>
+        {kind === 'cached' && (
           <button
             className="secondary"
             disabled={pending || !source}
@@ -197,13 +178,11 @@ export function Lab({ kind, initial }: { kind: Kind; initial: Observation }) {
           </button>
         )}
       </div>
-      {(kind === 'cached' || kind === 'lifetime') && (
-        <div className="key-switch">
-          引数の比較：<a href={`/${kind}?key=${kind}-a`}>キーA</a>
-          <a href={`/${kind}?key=${kind}-b`}>キーB</a>
-          <code>key = {key}</code>
-        </div>
-      )}
+      <div className="key-switch">
+        引数の比較：<a href={`/${kind}?key=${kind}-a`}>キーA</a>
+        <a href={`/${kind}?key=${kind}-b`}>キーB</a>
+        <code>key = {key}</code>
+      </div>
       <p className="status" role="status">
         {pending ? '実行中…' : notice}
       </p>

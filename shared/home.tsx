@@ -1,29 +1,16 @@
 import { experiments } from './catalog';
-export function Home({ modern }: { modern: boolean }) {
-  const cards = modern
-    ? [
-        { ...experiments.cached, href: '/cached?key=cache-a' },
-        { ...experiments.lifetime, href: '/lifetime?key=life-a' },
-        {
-          number: '07',
-          title: 'Partial Prerendering',
-          lead: '静的な部分を先に表示。動的な部分は後から届く。',
-          scope: '静的シェル + キャッシュ + ストリーミング',
-          href: '/ppr',
-        },
-      ]
-    : [
-        { ...experiments.memo, href: '/memo?key=memo-a' },
-        { ...experiments.data, href: '/data?key=data-a' },
-        { ...experiments.full, href: '/full-route' },
-        {
-          number: '04',
-          title: 'Router Cache',
-          lead: '戻る操作で、ブラウザ内の描画結果を再利用。',
-          scope: 'クライアントのRSCキャッシュ',
-          href: '/router/a',
-        },
-      ];
+export function Home() {
+  const cards = [
+    { ...experiments.cached, href: '/cached?key=cache-a' },
+    { ...experiments.lifetime, href: '/lifetime?key=life-a' },
+    {
+      number: '03',
+      title: 'Partial Prerendering',
+      lead: '静的な部分を先に表示。動的な部分は後から届く。',
+      scope: '静的シェル + キャッシュ + ストリーミング',
+      href: '/ppr',
+    },
+  ];
   return (
     <>
       <section className="hero">
@@ -40,7 +27,7 @@ export function Home({ modern }: { modern: boolean }) {
         </p>
         <div className="model-label">
           <span className="dot" />
-          {modern ? 'Cache Components 有効' : 'Cache Components 無効'}
+          Cache Components 有効
           <span>本番ビルドで検証</span>
         </div>
       </section>
