@@ -76,7 +76,9 @@ export function Lab({ kind, initial }: { kind: Kind; initial: Observation }) {
         setNotice(
           action === 'mutate'
             ? '取得元だけを+100円に更新しました。次に再リクエストしてください。'
-            : '無効化を受け付けました。次に再リクエストしてください。',
+            : action === 'swr'
+              ? 'タグ付きキャッシュを古い扱いにしました。次の再リクエストでは古いデータを返しながら、裏で最新データに更新します。更新完了後、もう一度再リクエストすると最新データを確認できます。'
+              : '無効化を受け付けました。次に再リクエストしてください。',
         );
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
@@ -174,10 +176,15 @@ export function Lab({ kind, initial }: { kind: Kind; initial: Observation }) {
             disabled={pending || !source}
             onClick={() => action('swr')}
           >
-            タグをSWRで無効化
+            タグ付きキャッシュを更新（SWR）
           </button>
         )}
       </div>
+      {kind === 'cached' && (
+        <p>
+          SWR：次のアクセスでは古いデータを返しながら、バックグラウンドで最新データに更新します。
+        </p>
+      )}
       <div className="key-switch">
         引数の比較：<a href={`/${kind}?key=${kind}-a`}>キーA</a>
         <a href={`/${kind}?key=${kind}-b`}>キーB</a>
